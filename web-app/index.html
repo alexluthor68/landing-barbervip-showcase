@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BarberVIP · Experiencia de Barbería Luxury</title>
+  <meta name="description"
+    content="BarberVIP: cortes premium, barba VIP y combos exclusivos. Reserva tu cita en tiempo real con nuestra automatización inteligente." />
+
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+
+  <!-- ================= HEADER ================= -->
+  <header id="header" class="site-header">
+    <nav class="nav">
+      <a href="#inicio" class="brand">
+        <span class="brand-mark">V</span>
+        <span class="brand-name">Barber<em class="gold-text">VIP</em></span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="#inicio">Inicio</a></li>
+        <li><a href="#servicios">Servicios</a></li>
+        <li><a href="#galeria">Galería</a></li>
+        <li><a href="#reservar">Reservar</a></li>
+      </ul>
+
+      <a href="#reservar" class="btn btn-primary nav-cta">Reservar Cita</a>
+
+      <button id="menuBtn" class="menu-btn" aria-label="Abrir menú" aria-expanded="false"
+        aria-controls="mobileMenu">&#9776;</button>
+    </nav>
+
+    <div id="mobileMenu" class="mobile-menu hidden">
+      <ul>
+        <li><a href="#inicio" class="mobile-link">Inicio</a></li>
+        <li><a href="#servicios" class="mobile-link">Servicios</a></li>
+        <li><a href="#galeria" class="mobile-link">Galería</a></li>
+        <li><a href="#reservar" class="btn btn-primary mobile-cta">Reservar Cita</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ================= HERO ================= -->
+  <section id="inicio" class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-image"></div>
+    <div class="hero-overlay"></div>
+    <div class="grain"></div>
+
+    <div class="hero-content reveal">
+      <p class="eyebrow">Est. 2015 · Tradición &amp; Estilo</p>
+      <h1>El Arte del <span class="gold-text shimmer">Corte VIP</span></h1>
+      <div class="gold-divider"></div>
+      <p class="hero-lede">
+        No es solo un corte, es una experiencia. Atención personalizada, ambiente exclusivo y reservas
+        inteligentes en tiempo real con nuestro motor de automatización.
+      </p>
+
+      <div class="hero-actions">
+        <a href="#reservar" class="btn btn-primary">Reservar mi Cita</a>
+        <a href="#galeria" class="btn btn-ghost">Ver Galería</a>
+      </div>
+    </div>
+
+    <a href="#servicios" class="scroll-cue" aria-label="Desplazar">&#8595;</a>
+  </section>
+
+  <!-- ================= SERVICIOS ================= -->
+  <section id="servicios" class="section">
+    <div class="section-title reveal">
+      <p class="eyebrow">Nuestra Carta</p>
+      <h2>Servicios <span class="gold-text">Exclusivos</span></h2>
+      <div class="gold-divider"></div>
+    </div>
+
+    <div id="servicesGrid" class="services-grid">
+      <!-- Las tarjetas se generan dinámicamente por JavaScript -->
+    </div>
+  </section>
+
+  <!-- ================= GALERÍA ================= -->
+  <section id="galeria" class="section gallery-section">
+    <div class="grain"></div>
+    <div class="gallery-inner">
+      <div class="section-title reveal">
+        <p class="eyebrow">Nuestro Portafolio</p>
+        <h2>Galería <span class="gold-text">Luxury</span></h2>
+        <div class="gold-divider"></div>
+        <p class="gallery-lede">
+          Cada corte es una obra de arte. Explora nuestros trabajos más exclusivos, donde la precisión
+          y el estilo se encuentran.
+        </p>
+      </div>
+
+      <div class="gallery">
+        <!-- Featured -->
+        <figure class="gallery-item featured reveal">
+          <img src="https://images.pexels.com/photos/2881253/pexels-photo-2881253.jpeg?auto=compress&cs=tinysrgb&w=1200"
+            alt="Barbero perfilando la barba de un cliente en BarberVIP" loading="lazy" decoding="async" width="900"
+            height="1200" />
+          <div class="gallery-overlay"></div>
+          <div class="gallery-glow"></div>
+          <span class="gallery-badge">&#9986;</span>
+          <figcaption class="gallery-caption">
+            <span class="tag">Signature</span>
+            <h3>Perfilado de Barba</h3>
+          </figcaption>
+        </figure>
+
+        <figure class="gallery-item wide reveal" style="transition-delay:80ms">
+          <img
+            src="https://images.pexels.com/photos/1813272/pexels-photo-1813272.jpeg?auto=compress&cs=tinysrgb&w=1600&h=1067&fit=crop&dpr=2"
+            alt="Corte de cabello clásico a máquina y tijera" loading="lazy" decoding="async" width="1200"
+            height="800" />
+          <div class="gallery-overlay"></div>
+          <div class="gallery-glow"></div>
+          <figcaption class="gallery-caption">
+            <span class="tag">Fade</span>
+            <h3>Corte Clásico</h3>
+          </figcaption>
+        </figure>
+
+        <figure class="gallery-item compact reveal" style="transition-delay:160ms">
+          <img src="https://images.pexels.com/photos/7697400/pexels-photo-7697400.jpeg?auto=compress&cs=tinysrgb&w=800"
+            alt="Barbero peinando y estilizando el cabello de un cliente" loading="lazy" decoding="async" width="800"
+            height="1000" />
+          <div class="gallery-overlay"></div>
+          <figcaption class="gallery-caption">
+            <span class="tag">Styling</span>
+            <h3>Estilizado</h3>
+          </figcaption>
+        </figure>
+
+        <figure class="gallery-item compact reveal" style="transition-delay:200ms">
+          <img src="https://images.pexels.com/photos/5584458/pexels-photo-5584458.jpeg?auto=compress&cs=tinysrgb&w=800"
+            alt="Detalle de barbero cortando el cabello con tijeras y peine" loading="lazy" decoding="async" width="800"
+            height="1000" />
+          <div class="gallery-overlay"></div>
+          <figcaption class="gallery-caption">
+            <span class="tag">Detail</span>
+            <h3>Detalle a Tijera</h3>
+          </figcaption>
+        </figure>
+
+        <figure class="gallery-item compact reveal" style="transition-delay:260ms">
+          <img src="https://images.pexels.com/photos/2076932/pexels-photo-2076932.jpeg?auto=compress&cs=tinysrgb&w=800"
+            alt="Barbero cortando el cabello en una barbería moderna" loading="lazy" decoding="async" width="800"
+            height="1000" />
+          <div class="gallery-overlay"></div>
+          <figcaption class="gallery-caption">
+            <span class="tag">Grooming</span>
+            <h3>Ambiente VIP</h3>
+          </figcaption>
+        </figure>
+
+        <figure class="gallery-item compact reveal" style="transition-delay:320ms">
+          <img src="https://images.pexels.com/photos/7447135/pexels-photo-7447135.jpeg?auto=compress&cs=tinysrgb&w=800"
+            alt="Hombre recibiendo un corte de cabello en barbería" loading="lazy" decoding="async" width="800"
+            height="1000" />
+          <div class="gallery-overlay"></div>
+          <figcaption class="gallery-caption">
+            <span class="tag">Experience</span>
+            <h3>La Experiencia</h3>
+          </figcaption>
+        </figure>
+
+        <figure class="gallery-item wide reveal" style="transition-delay:380ms">
+          <img src="https://images.pexels.com/photos/2076930/pexels-photo-2076930.jpeg?auto=compress&cs=tinysrgb&w=1200"
+            alt="Barbero profesional cortando el cabello de un cliente" loading="lazy" decoding="async" width="1200"
+            height="800" />
+          <div class="gallery-overlay"></div>
+          <div class="gallery-glow"></div>
+          <figcaption class="gallery-caption">
+            <span class="tag">Craft</span>
+            <h3>Arte Clásico</h3>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="gallery-cta reveal">
+        <div class="gallery-cta-inner">
+          <div>
+            <p class="eyebrow">Tu mejor versión te espera</p>
+            <h3>¿Listo para tu <span class="gold-text">transformación</span>?</h3>
+          </div>
+          <a href="#reservar" class="btn btn-primary">Reservar mi Cita</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= RESERVA ================= -->
+  <section id="reservar" class="section booking">
+    <div class="grain"></div>
+    <div class="booking-grid">
+
+      <div class="booking-info reveal">
+        <p class="eyebrow">Agenda tu momento</p>
+        <h2>Reserva tu <span class="gold-text">Cita VIP</span></h2>
+        <p class="lede">
+          Completa el formulario y nuestro sistema procesará tu reserva al instante. Recibirás
+          confirmación directa por WhatsApp.
+        </p>
+        <ul class="booking-list">
+          <li><span class="star">&#10022;</span> Confirmación automática en segundos</li>
+          <li><span class="star">&#10022;</span> Recordatorio por WhatsApp</li>
+          <li><span class="star">&#10022;</span> Horarios flexibles y atención premium</li>
+        </ul>
+      </div>
+
+      <form id="bookingForm" class="booking-form reveal" novalidate>
+        <h3>Nueva Reserva</h3>
+
+        <div class="form-fields">
+          <div class="form-group">
+            <label for="nombre">Nombre Completo</label>
+            <input id="nombre" name="nombre" type="text" required placeholder="Juan Pérez" />
+          </div>
+
+          <div class="form-group">
+            <label for="telefono">Teléfono WhatsApp</label>
+            <input id="telefono" name="telefono" type="tel" required placeholder="+57 300 123 4567" />
+          </div>
+
+          <div class="form-group">
+            <label for="servicio">Servicio</label>
+            <select id="servicio" name="servicio" required>
+              <option value="" disabled selected>Selecciona un servicio</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="fecha">Fecha</label>
+              <input id="fecha" name="fecha" type="date" required />
+            </div>
+            <div class="form-group">
+              <label for="hora">Hora</label>
+              <input id="hora" name="hora" type="time" required />
+            </div>
+          </div>
+        </div>
+
+        <button id="submitBtn" type="submit" class="btn-submit">Confirmar Reserva</button>
+
+        <p id="formError" class="form-error hidden"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="brand-mark">V</span>
+        <span class="brand-name">Barber<em class="gold-text">VIP</em></span>
+      </div>
+      <p class="footer-copy">© <span id="year"></span> BarberVIP. Todos los derechos reservados.</p>
+      <p class="footer-note">Powered by n8n Automation</p>
+    </div>
+  </footer>
+
+  <!-- ================= MODAL DE CONFIRMACIÓN ================= -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card">
+      <div id="modalIcon" class="modal-icon"></div>
+      <h3 id="modalTitle"></h3>
+      <p id="modalMessage"></p>
+      <button class="modal-close" data-close>Cerrar</button>
+    </div>
+  </div>
+
+  <!-- ================= TOAST ================= -->
+  <div id="toast" class="toast hidden">
+    <div class="toast-inner">
+      <span class="toast-dot"></span>
+      <span id="toastMessage" class="toast-message"></span>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // BarberVIP - Lógica de la Landing Page
+    // ============================================================
+
+    // Configuración del endpoint Webhook de n8n
+    const N8N_WEBHOOK_URL = 'http://localhost:5678/webhook/reserva';
+
+    // Catálogo de servicios (se usa para tarjetas y select del formulario)
+    const SERVICES = [
+      {
+        name: 'Corte Premium',
+        price: '25 USD',
+        duration: '45 min',
+        description: 'Corte personalizado con máquina y tijera, lavado premium y acabado con productos de alta gama.',
+        icon: '&#9986;' // tijeras
+      },
+      {
+        name: 'Barba VIP',
+        price: '18 USD',
+        duration: '30 min',
+        description: 'Perfilado, afeitado con navaja y tratamiento hidratante con aceites esenciales exclusivos.',
+        icon: '&#128104;' // persona
+      },
+      {
+        name: 'Combo Completo',
+        price: '38 USD',
+        duration: '75 min',
+        description: 'La experiencia total: corte premium + barba VIP + tratamiento facial y masaje capilar.',
+        icon: '&#128142;' // diamante
+      }
+    ];
+
+    // ---------- Render de tarjetas de servicios ----------
+    function renderServices() {
+      const grid = document.getElementById('servicesGrid');
+      grid.innerHTML = SERVICES.map((s, i) => `
+        <article class="service-card reveal" style="transition-delay:${i * 100}ms">
+          <div class="service-icon">${s.icon}</div>
+          <h3>${s.name}</h3>
+          <p>${s.description}</p>
+          <div class="service-footer">
+            <div>
+              <p class="service-price gold-text">${s.price}</p>
+              <p class="service-duration">${s.duration}</p>
+            </div>
+            <button type="button" data-service="${s.name}" class="choose-service">Reservar</button>
+          </div>
+        </article>
+      `).join('');
+
+      // Poblar el select del formulario
+      const select = document.getElementById('servicio');
+      SERVICES.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.name;
+        opt.textContent = `${s.name} — ${s.price}`;
+        select.appendChild(opt);
+      });
+
+      // Botones "Reservar" de las tarjetas
+      document.querySelectorAll('.choose-service').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.getElementById('servicio').value = btn.dataset.service;
+          document.getElementById('reservar').scrollIntoView({ behavior: 'smooth' });
+        });
+      });
+
+      observeReveals();
+    }
+
+    // ---------- Utilidades de UI ----------
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMessage').textContent = message;
+      toast.classList.remove('hidden');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => toast.classList.add('hidden'), 3500);
+    }
+
+    function showModal(type, title, message) {
+      const modal = document.getElementById('modal');
+      const icon = document.getElementById('modalIcon');
+      const isSuccess = type === 'success';
+
+      icon.className = 'modal-icon ' + (isSuccess ? 'success' : 'error');
+      icon.innerHTML = isSuccess ? '&#10003;' : '&#10007;';
+
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalMessage').textContent = message;
+      modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.add('hidden');
+    }
+
+    // ---------- Validación ----------
+    function validateForm(data) {
+      if (!data.nombre.trim()) return 'Por favor ingresa tu nombre completo.';
+      if (!/^[+()\d\s-]{7,}$/.test(data.telefono.trim())) return 'Ingresa un número de teléfono válido.';
+      if (!data.servicio) return 'Selecciona un servicio.';
+      if (!data.fecha) return 'Selecciona una fecha.';
+      if (!data.hora) return 'Selecciona una hora.';
+      return null;
+    }
+
+    // ---------- Envío al Webhook de n8n ----------
+    async function submitBooking(event) {
+      event.preventDefault();
+
+      const form = document.getElementById('bookingForm');
+      const errorEl = document.getElementById('formError');
+      const submitBtn = document.getElementById('submitBtn');
+
+      errorEl.classList.add('hidden');
+
+      const payload = {
+        nombre: form.nombre.value,
+        telefono: form.telefono.value,
+        servicio: form.servicio.value,
+        fecha: form.fecha.value,
+        hora: form.hora.value
+      };
+
+      const validationError = validateForm(payload);
+      if (validationError) {
+        errorEl.textContent = validationError;
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Enviando...';
+
+      try {
+        const response = await fetch(N8N_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          showModal('success', '¡Reserva Confirmada!',
+            `Gracias ${payload.nombre}, tu cita para ${payload.servicio} el ${payload.fecha} a las ${payload.hora} ha sido registrada. Te contactaremos por WhatsApp.`);
+          showToast('Reserva enviada correctamente');
+          form.reset();
+        } else {
+          throw new Error('El servidor respondió con estado ' + response.status);
+        }
+      } catch (error) {
+        console.error('[BarberVIP] Error al enviar reserva:', error);
+        showModal('error', 'No se pudo completar',
+          'No pudimos registrar tu reserva en este momento. Verifica tu conexión con el servicio e inténtalo de nuevo.');
+        showToast('Error al enviar la reserva');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Confirmar Reserva';
+      }
+    }
+
+    // ---------- Animaciones de aparición (scroll reveal) ----------
+    function observeReveals() {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15 });
+
+      document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    }
+
+    // ---------- Inicialización ----------
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('year').textContent = new Date().getFullYear();
+      renderServices();
+
+      // Fecha mínima = hoy
+      const now = new Date();
+      const today = [
+        now.getFullYear(),
+        String(now.getMonth() + 1).padStart(2, '0'),
+        String(now.getDate()).padStart(2, '0')
+      ].join('-');
+      document.getElementById('fecha').setAttribute('min', today);
+
+      document.getElementById('bookingForm').addEventListener('submit', submitBooking);
+
+      document.getElementById('modal').addEventListener('click', (e) => {
+        if (e.target.hasAttribute('data-close')) closeModal();
+      });
+
+      const menuBtn = document.getElementById('menuBtn');
+      const mobileMenu = document.getElementById('mobileMenu');
+
+      const setMenu = (open) => {
+        mobileMenu.classList.toggle('hidden', !open);
+        menuBtn.setAttribute('aria-expanded', String(open));
+        menuBtn.innerHTML = open ? '&times;' : '&#9776;';
+        menuBtn.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+      };
+
+      menuBtn.addEventListener('click', () => setMenu(mobileMenu.classList.contains('hidden')));
+
+      // Cerrar el menú móvil al navegar (mejora UX táctil)
+      document.querySelectorAll('.mobile-link').forEach(link => {
+        link.addEventListener('click', () => setMenu(false));
+      });
+
+      // Cerrar el menú al pasar a escritorio
+      window.addEventListener('resize', () => { if (window.innerWidth >= 768) setMenu(false); });
+
+      // Header con fondo al hacer scroll
+      const header = document.getElementById('header');
+      window.addEventListener('scroll', () => {
+        header.classList.toggle('scrolled', window.scrollY > 40);
+      });
+    });
+  </script>
+</body>
+
+</html>
