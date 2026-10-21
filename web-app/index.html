@@ -25,6 +25,7 @@
         <li><a href="#inicio">Inicio</a></li>
         <li><a href="#servicios">Servicios</a></li>
         <li><a href="#galeria">Galería</a></li>
+        <li><a href="#horario">Horario</a></li>
         <li><a href="#reservar">Reservar</a></li>
       </ul>
 
@@ -39,6 +40,7 @@
         <li><a href="#inicio" class="mobile-link">Inicio</a></li>
         <li><a href="#servicios" class="mobile-link">Servicios</a></li>
         <li><a href="#galeria" class="mobile-link">Galería</a></li>
+        <li><a href="#horario" class="mobile-link">Horario</a></li>
         <li><a href="#reservar" class="btn btn-primary mobile-cta">Reservar Cita</a></li>
       </ul>
     </div>
@@ -193,6 +195,22 @@
     </div>
   </section>
 
+  <!-- ================= HORARIO ================= -->
+  <section id="horario" class="section hours-section">
+    <div class="section-title reveal">
+      <p class="eyebrow">Cuándo encontrás BarberVIP</p>
+      <h2>Horario <span class="gold-text">de Atención</span></h2>
+      <div class="gold-divider"></div>
+    </div>
+
+    <div class="hours-inner">
+      <ul id="scheduleList" class="schedule-list">
+        <!-- Generado dinámicamente desde BUSINESS_CONFIG -->
+      </ul>
+      <p id="peakHoursNote" class="peak-note"></p>
+    </div>
+  </section>
+
   <!-- ================= RESERVA ================= -->
   <section id="reservar" class="section booking">
     <div class="grain"></div>
@@ -283,64 +301,86 @@
     </div>
   </div>
 
+  <script src="./config.js"></script>
   <script>
     // ============================================================
     // BarberVIP - Lógica de la Landing Page
     // ============================================================
 
     // Configuración del endpoint Webhook de n8n
-    const N8N_WEBHOOK_URL = 'http://localhost:5678/webhook/reserva';
+    const N8N_WEBHOOK_URL = 'http://192.168.1.5:5678/webhook/reserva';
 
-    // Catálogo de servicios (se usa para tarjetas y select del formulario)
-    const SERVICES = [
-      {
-        name: 'Corte Premium',
-        price: '25 USD',
-        duration: '45 min',
-        description: 'Corte personalizado con máquina y tijera, lavado premium y acabado con productos de alta gama.',
-        icon: '&#9986;' // tijeras
-      },
-      {
-        name: 'Barba VIP',
-        price: '18 USD',
-        duration: '30 min',
-        description: 'Perfilado, afeitado con navaja y tratamiento hidratante con aceites esenciales exclusivos.',
-        icon: '&#128104;' // persona
-      },
-      {
-        name: 'Combo Completo',
-        price: '38 USD',
-        duration: '75 min',
-        description: 'La experiencia total: corte premium + barba VIP + tratamiento facial y masaje capilar.',
-        icon: '&#128142;' // diamante
-      }
-    ];
+    // Catálogo y horario provistos por ./config.js (BUSINESS_CONFIG)
 
-    // ---------- Render de tarjetas de servicios ----------
+    // Nombres de día en español alineados con Date.getDay() (0 = Domingo)
+    const DAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+
+    // ---------- Utilidades de catálogo y horario ----------
+    function formatPrice(priceRange) {
+      const parts = String(priceRange).split(' - ').map(p => p.trim());
+      const formatted = parts.map(p => `$${p}`).join(' – ');
+      return `${formatted} ${BUSINESS_CONFIG.currency}`;
+    }
+
+    function getScheduleForDate(fechaStr) {
+      // 'YYYY-MM-DD' -> mediodía local para evitar corrimiento de zona horaria
+      const date = new Date(`${fechaStr}T12:00:00`);
+      if (Number.isNaN(date.getTime())) return null;
+      const dayName = DAY_NAMES[date.getDay()];
+      return BUSINESS_CONFIG.business_hours.schedule.find(entry => entry.days.includes(dayName)) || null;
+    }
+
+    function formatHour(hhmm) {
+      const [h, m] = hhmm.split(':').map(Number);
+      const suffix = h >= 12 ? 'PM' : 'AM';
+      const hour12 = h % 12 === 0 ? 12 : h % 12;
+      return `${hour12}:${String(m).padStart(2, '0')} ${suffix}`;
+    }
+
+    // ---------- Render de tarjetas de servicios (por categoría) ----------
     function renderServices() {
       const grid = document.getElementById('servicesGrid');
-      grid.innerHTML = SERVICES.map((s, i) => `
-        <article class="service-card reveal" style="transition-delay:${i * 100}ms">
-          <div class="service-icon">${s.icon}</div>
-          <h3>${s.name}</h3>
-          <p>${s.description}</p>
-          <div class="service-footer">
-            <div>
-              <p class="service-price gold-text">${s.price}</p>
-              <p class="service-duration">${s.duration}</p>
-            </div>
-            <button type="button" data-service="${s.name}" class="choose-service">Reservar</button>
+      let delay = 0;
+
+      grid.innerHTML = BUSINESS_CONFIG.categories.map(category => `
+        <div class="service-category">
+          <div class="category-header reveal">
+            <span class="category-icon">${category.icon}</span>
+            <h3>${category.name}</h3>
           </div>
-        </article>
+          <div class="category-grid">
+            ${category.services.map(service => {
+              const html = `
+                <article class="service-card reveal" style="transition-delay:${delay * 80}ms">
+                  <h3>${service.name}</h3>
+                  <p>${service.description}</p>
+                  <div class="service-footer">
+                    <div>
+                      <p class="service-price gold-text">${formatPrice(service.price_range)}</p>
+                      <p class="service-duration">${service.duration}</p>
+                    </div>
+                    <button type="button" data-service="${service.name}" class="choose-service">Reservar</button>
+                  </div>
+                </article>`;
+              delay += 1;
+              return html;
+            }).join('')}
+          </div>
+        </div>
       `).join('');
 
-      // Poblar el select del formulario
+      // Poblar el select del formulario con optgroups por categoría
       const select = document.getElementById('servicio');
-      SERVICES.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.name;
-        opt.textContent = `${s.name} — ${s.price}`;
-        select.appendChild(opt);
+      BUSINESS_CONFIG.categories.forEach(category => {
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = category.name;
+        category.services.forEach(service => {
+          const opt = document.createElement('option');
+          opt.value = service.name;
+          opt.textContent = `${service.name} — ${formatPrice(service.price_range)}`;
+          optgroup.appendChild(opt);
+        });
+        select.appendChild(optgroup);
       });
 
       // Botones "Reservar" de las tarjetas
@@ -350,6 +390,26 @@
           document.getElementById('reservar').scrollIntoView({ behavior: 'smooth' });
         });
       });
+
+      observeReveals();
+    }
+
+    // ---------- Render del horario de atención ----------
+    function renderSchedule() {
+      const list = document.getElementById('scheduleList');
+      const { schedule, peak_hours_note } = BUSINESS_CONFIG.business_hours;
+
+      list.innerHTML = schedule.map(entry => `
+        <li class="schedule-item ${entry.is_open ? '' : 'closed'} reveal">
+          <span class="schedule-label">${entry.label}</span>
+          <span class="schedule-time">
+            ${entry.is_open ? `${formatHour(entry.open)} – ${formatHour(entry.close)}` : 'Solo con reserva previa'}
+          </span>
+          ${entry.note ? `<span class="schedule-note">${entry.note}</span>` : ''}
+        </li>
+      `).join('');
+
+      document.getElementById('peakHoursNote').textContent = peak_hours_note;
 
       observeReveals();
     }
@@ -387,6 +447,14 @@
       if (!data.servicio) return 'Selecciona un servicio.';
       if (!data.fecha) return 'Selecciona una fecha.';
       if (!data.hora) return 'Selecciona una hora.';
+
+      const schedule = getScheduleForDate(data.fecha);
+      if (!schedule || !schedule.is_open) {
+        return 'No atendemos ese día (festivos o días no laborables). Elige otra fecha o contáctanos para reserva previa.';
+      }
+      if (data.hora < schedule.open || data.hora > schedule.close) {
+        return `La hora debe estar dentro del horario de ${schedule.label}: ${formatHour(schedule.open)} – ${formatHour(schedule.close)}.`;
+      }
       return null;
     }
 
@@ -462,15 +530,27 @@
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('year').textContent = new Date().getFullYear();
       renderServices();
+      renderSchedule();
 
-      // Fecha mínima = hoy
-      const now = new Date();
-      const today = [
-        now.getFullYear(),
-        String(now.getMonth() + 1).padStart(2, '0'),
-        String(now.getDate()).padStart(2, '0')
-      ].join('-');
-      document.getElementById('fecha').setAttribute('min', today);
+      // Fecha mínima = hoy (zona horaria del negocio)
+      const today = new Intl.DateTimeFormat('en-CA', {
+        timeZone: BUSINESS_CONFIG.business_hours.timezone
+      }).format(new Date());
+      const fechaInput = document.getElementById('fecha');
+      fechaInput.setAttribute('min', today);
+
+      // Avisar al usuario si el día elegido no tiene horario disponible
+      fechaInput.addEventListener('change', () => {
+        const schedule = getScheduleForDate(fechaInput.value);
+        if (!fechaInput.value || !schedule) return;
+        if (!schedule.is_open) {
+          showToast('Ese día no atendemos. Solo con reserva previa.');
+        } else {
+          const horaInput = document.getElementById('hora');
+          horaInput.setAttribute('min', schedule.open);
+          horaInput.setAttribute('max', schedule.close);
+        }
+      });
 
       document.getElementById('bookingForm').addEventListener('submit', submitBooking);
 
