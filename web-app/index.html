@@ -204,8 +204,18 @@
     </div>
 
     <div class="hours-inner">
+      <div id="openStatus" class="open-status" role="status" aria-live="polite">
+        <span class="open-status-dot" aria-hidden="true"></span>
+        <span class="open-status-text">
+          <span id="openStatusLabel" class="open-status-label">Consultando estado…</span>
+          <span id="openStatusDetail" class="open-status-detail"></span>
+        </span>
+      </div>
       <ul id="scheduleList" class="schedule-list">
         <!-- Generado dinámicamente desde BUSINESS_CONFIG -->
+      </ul>
+      <ul id="holidayList" class="holiday-list">
+        <!-- Próximos festivos: generado dinámicamente desde BUSINESS_CONFIG -->
       </ul>
       <p id="peakHoursNote" class="peak-note"></p>
     </div>
@@ -263,7 +273,10 @@
           </div>
         </div>
 
-        <button id="submitBtn" type="submit" class="btn-submit">Confirmar Reserva</button>
+        <button id="submitBtn" type="submit" class="btn-submit">
+          <span class="btn-spinner" aria-hidden="true"></span>
+          <span class="btn-label">Confirmar Reserva</span>
+        </button>
 
         <p id="formError" class="form-error hidden"></p>
       </form>
@@ -289,6 +302,24 @@
       <div id="modalIcon" class="modal-icon"></div>
       <h3 id="modalTitle"></h3>
       <p id="modalMessage"></p>
+      <dl id="modalSummary" class="modal-summary hidden">
+        <div class="modal-summary-row">
+          <dt>Servicio</dt>
+          <dd id="summaryService"></dd>
+        </div>
+        <div class="modal-summary-row">
+          <dt>Fecha</dt>
+          <dd id="summaryDate"></dd>
+        </div>
+        <div class="modal-summary-row">
+          <dt>Hora</dt>
+          <dd id="summaryTime"></dd>
+        </div>
+        <div class="modal-summary-row">
+          <dt>Teléfono</dt>
+          <dd id="summaryPhone"></dd>
+        </div>
+      </dl>
       <button class="modal-close" data-close>Cerrar</button>
     </div>
   </div>
@@ -307,13 +338,24 @@
     // BarberVIP - Lógica de la Landing Page
     // ============================================================
 
-    // Configuración del endpoint Webhook de n8n
-    const N8N_WEBHOOK_URL = 'http://192.168.1.5:5678/webhook/reserva';
+    // Endpoint Webhook de n8n, configurado en ./config.js
+    // - Producción: BUSINESS_CONFIG.n8n.webhook_url (URL pública HTTPS)
+    // - Local / Docker: fallback BUSINESS_CONFIG.n8n.webhook_fallback
+    const N8N_WEBHOOK_URL = resolveWebhookUrl();
+
+    function resolveWebhookUrl() {
+      const n8n = BUSINESS_CONFIG.n8n || {};
+      const configured = (n8n.webhook_url || '').trim();
+      return configured || n8n.webhook_fallback || 'http://localhost:5678/webhook/reserva';
+    }
 
     // Catálogo y horario provistos por ./config.js (BUSINESS_CONFIG)
 
     // Nombres de día en español alineados con Date.getDay() (0 = Domingo)
     const DAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+
+    const MONTH_NAMES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
     // ---------- Utilidades de catálogo y horario ----------
     function formatPrice(priceRange) {
@@ -322,12 +364,65 @@
       return `${formatted} ${BUSINESS_CONFIG.currency}`;
     }
 
+    // Festivo de Colombia que coincide con la fecha indicada ('YYYY-MM-DD')
+    function getHolidayForDate(fechaStr) {
+      if (!fechaStr) return null;
+      const holidays = BUSINESS_CONFIG.business_hours.holidays || [];
+      return holidays.find(holiday => holiday.date === fechaStr) || null;
+    }
+
     function getScheduleForDate(fechaStr) {
+      if (!fechaStr) return null;
       // 'YYYY-MM-DD' -> mediodía local para evitar corrimiento de zona horaria
       const date = new Date(`${fechaStr}T12:00:00`);
       if (Number.isNaN(date.getTime())) return null;
       const dayName = DAY_NAMES[date.getDay()];
-      return BUSINESS_CONFIG.business_hours.schedule.find(entry => entry.days.includes(dayName)) || null;
+      const schedule = BUSINESS_CONFIG.business_hours.schedule;
+      const weekday = schedule.find(entry => entry.days.includes(dayName)) || null;
+
+      // Los festivos se atienden como día cerrado (solo con reserva previa)
+      const holiday = getHolidayForDate(fechaStr);
+      if (holiday) {
+        const closed = schedule.find(entry => entry.days.includes('Festivos'));
+        return closed ? Object.assign({}, closed, { holidayName: holiday.name }) : weekday;
+      }
+      return weekday;
+    }
+
+    // Servicio del catálogo a partir de su nombre
+    function getService(serviceName) {
+      if (!serviceName) return null;
+      for (const category of BUSINESS_CONFIG.categories) {
+        const service = category.services.find(item => item.name === serviceName);
+        if (service) return service;
+      }
+      return null;
+    }
+
+    // ---------- Utilidades de hora ----------
+    function timeToMinutes(hhmm) {
+      const [h, m] = String(hhmm).split(':').map(Number);
+      return (h * 60) + m;
+    }
+
+    function minutesToTime(total) {
+      const clamped = Math.max(0, Math.min((24 * 60) - 1, Math.round(total)));
+      const h = Math.floor(clamped / 60);
+      const m = clamped % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    }
+
+    function formatDateLong(fechaStr) {
+      const date = new Date(`${fechaStr}T12:00:00`);
+      if (Number.isNaN(date.getTime())) return fechaStr;
+      return `${date.getDate()} de ${MONTH_NAMES[date.getMonth()]} de ${date.getFullYear()}`;
+    }
+
+    function formatDateWithWeekday(fechaStr) {
+      const date = new Date(`${fechaStr}T12:00:00`);
+      if (Number.isNaN(date.getTime())) return fechaStr;
+      const weekday = DAY_NAMES[date.getDay()].toLowerCase();
+      return `${weekday} ${formatDateLong(fechaStr)}`;
     }
 
     function formatHour(hhmm) {
@@ -335,6 +430,81 @@
       const suffix = h >= 12 ? 'PM' : 'AM';
       const hour12 = h % 12 === 0 ? 12 : h % 12;
       return `${hour12}:${String(m).padStart(2, '0')} ${suffix}`;
+    }
+
+    // ---------- Opción B: estado de apertura en tiempo real ----------
+    // Fecha y hora actuales en la zona horaria del negocio (config.js)
+    function getBusinessNow() {
+      const timeZone = BUSINESS_CONFIG.business_hours.timezone;
+      const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23'
+      }).formatToParts(new Date());
+
+      const part = type => (parts.find(item => item.type === type) || {}).value || '00';
+      return {
+        fecha: `${part('year')}-${part('month')}-${part('day')}`,
+        hora: `${part('hour')}:${part('minute')}`
+      };
+    }
+
+    // Estado de la barbería según schedule + festivos de config.js
+    function getOpenState(now) {
+      const schedule = getScheduleForDate(now.fecha);
+
+      if (!schedule) {
+        return { isOpen: false, label: 'Cerrada ahora', detail: 'No atendemos ese día' };
+      }
+      if (!schedule.is_open) {
+        return {
+          isOpen: false,
+          label: 'Cerrada ahora',
+          detail: schedule.holidayName
+            ? `${schedule.holidayName}: solo con reserva previa`
+            : 'Solo con reserva previa'
+        };
+      }
+
+      const current = timeToMinutes(now.hora);
+      const open = timeToMinutes(schedule.open);
+      const close = timeToMinutes(schedule.close);
+
+      if (current >= open && current < close) {
+        return { isOpen: true, label: 'Abierta ahora', detail: `Cierra a las ${formatHour(schedule.close)}` };
+      }
+      if (current < open) {
+        return { isOpen: false, label: 'Cerrada ahora', detail: `Abre a las ${formatHour(schedule.open)}` };
+      }
+      return { isOpen: false, label: 'Cerrada ahora', detail: `Cerró a las ${formatHour(schedule.close)}` };
+    }
+
+    function renderOpenStatus() {
+      const badge = document.getElementById('openStatus');
+      if (!badge) return;
+      const state = getOpenState(getBusinessNow());
+      const labelEl = document.getElementById('openStatusLabel');
+      const detailEl = document.getElementById('openStatusDetail');
+
+      // Solo se actualiza el DOM si algo cambió (evita anuncios repetidos)
+      if (labelEl.textContent !== state.label) labelEl.textContent = state.label;
+      if (detailEl.textContent !== state.detail) detailEl.textContent = state.detail;
+
+      badge.classList.toggle('is-open', state.isOpen);
+      badge.classList.toggle('is-closed', !state.isOpen);
+    }
+
+    // Mantiene el badge sincronizado con el reloj del negocio
+    function startOpenStatusWatcher() {
+      renderOpenStatus();
+      setInterval(renderOpenStatus, 30000);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) renderOpenStatus();
+      });
     }
 
     // ---------- Render de tarjetas de servicios (por categoría) ----------
@@ -359,7 +529,8 @@
                       <p class="service-price gold-text">${formatPrice(service.price_range)}</p>
                       <p class="service-duration">${service.duration}</p>
                     </div>
-                    <button type="button" data-service="${service.name}" class="choose-service">Reservar</button>
+                    <button type="button" data-service="${service.name}" class="choose-service"
+                      aria-label="Reservar este servicio: ${service.name}">Agendar</button>
                   </div>
                 </article>`;
               delay += 1;
@@ -383,15 +554,43 @@
         select.appendChild(optgroup);
       });
 
-      // Botones "Reservar" de las tarjetas
+      // Botones "Agendar" de las tarjetas
       document.querySelectorAll('.choose-service').forEach(btn => {
         btn.addEventListener('click', () => {
-          document.getElementById('servicio').value = btn.dataset.service;
-          document.getElementById('reservar').scrollIntoView({ behavior: 'smooth' });
+          selectService(btn.dataset.service);
         });
       });
 
       observeReveals();
+    }
+
+    // ---------- Opción A: selección rápida desde la tarjeta ----------
+    // Autoselecciona el servicio en el formulario y lleva al usuario al booking
+    function selectService(serviceName) {
+      const select = document.getElementById('servicio');
+      select.value = serviceName;
+      applyTimeBounds();
+      highlightSelectedCard(serviceName);
+
+      const form = document.getElementById('bookingForm');
+      form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Foco en el primer campo pendiente de completar
+      const nombre = document.getElementById('nombre');
+      if (!nombre.value) {
+        setTimeout(() => nombre.focus({ preventScroll: true }), 450);
+      }
+
+      showToast(`Servicio seleccionado: ${serviceName}`);
+    }
+
+    // Marca visualmente la tarjeta del servicio activo
+    function highlightSelectedCard(serviceName) {
+      document.querySelectorAll('.service-card').forEach(card => {
+        const button = card.querySelector('.choose-service');
+        const isActive = !!button && button.dataset.service === serviceName;
+        card.classList.toggle('is-selected', isActive);
+      });
     }
 
     // ---------- Render del horario de atención ----------
@@ -409,6 +608,23 @@
         </li>
       `).join('');
 
+      // Próximos festivos: días sin atención (salvo reserva previa)
+      const holidayList = document.getElementById('holidayList');
+      const today = new Intl.DateTimeFormat('en-CA', {
+        timeZone: BUSINESS_CONFIG.business_hours.timezone
+      }).format(new Date());
+      const upcoming = (BUSINESS_CONFIG.business_hours.holidays || [])
+        .filter(holiday => holiday.date >= today)
+        .slice(0, 6);
+
+      holidayList.innerHTML = upcoming.map(holiday => `
+        <li class="holiday-item">
+          <span class="holiday-date">${formatDateLong(holiday.date)}</span>
+          <span class="holiday-name">${holiday.name}</span>
+        </li>
+      `).join('');
+      holidayList.hidden = upcoming.length === 0;
+
       document.getElementById('peakHoursNote').textContent = peak_hours_note;
 
       observeReveals();
@@ -423,7 +639,7 @@
       window.__toastTimer = setTimeout(() => toast.classList.add('hidden'), 3500);
     }
 
-    function showModal(type, title, message) {
+    function showModal(type, title, message, summary) {
       const modal = document.getElementById('modal');
       const icon = document.getElementById('modalIcon');
       const isSuccess = type === 'success';
@@ -433,11 +649,61 @@
 
       document.getElementById('modalTitle').textContent = title;
       document.getElementById('modalMessage').textContent = message;
+
+      // Resumen de la cita (solo en confirmaciones)
+      const summaryEl = document.getElementById('modalSummary');
+      if (summary && summary.length) {
+        summaryEl.innerHTML = summary.map(row => `
+          <div class="modal-summary-row">
+            <dt>${row.label}</dt>
+            <dd>${row.value}</dd>
+          </div>
+        `).join('');
+        summaryEl.classList.remove('hidden');
+      } else {
+        summaryEl.innerHTML = '';
+        summaryEl.classList.add('hidden');
+      }
+
       modal.classList.remove('hidden');
     }
 
     function closeModal() {
       document.getElementById('modal').classList.add('hidden');
+    }
+
+    // ---------- Límites del selector de hora ----------
+    // Recalcula min/max según el día elegido y la duración del servicio.
+    // Siempre reescribe los límites para no dejar valores obsoletos.
+    function applyTimeBounds() {
+      const fechaInput = document.getElementById('fecha');
+      const horaInput = document.getElementById('hora');
+      const servicioInput = document.getElementById('servicio');
+
+      const schedule = getScheduleForDate(fechaInput.value);
+      if (!fechaInput.value || !schedule || !schedule.is_open) {
+        horaInput.removeAttribute('min');
+        horaInput.removeAttribute('max');
+        return;
+      }
+
+      const service = getService(servicioInput.value);
+      const duration = service ? service.duration_max : 0;
+      const latestStart = minutesToTime(timeToMinutes(schedule.close) - duration);
+
+      horaInput.setAttribute('min', schedule.open);
+      horaInput.setAttribute('max', duration > 0 ? latestStart : schedule.close);
+    }
+
+    // ¿La hora seleccionada quedó fuera de los límites vigentes?
+    function isHourOutsideBounds(horaInput) {
+      if (!horaInput.value) return false;
+      const min = horaInput.getAttribute('min');
+      const max = horaInput.getAttribute('max');
+      const value = timeToMinutes(horaInput.value);
+      if (min && value < timeToMinutes(min)) return true;
+      if (max && value > timeToMinutes(max)) return true;
+      return false;
     }
 
     // ---------- Validación ----------
@@ -449,22 +715,47 @@
       if (!data.hora) return 'Selecciona una hora.';
 
       const schedule = getScheduleForDate(data.fecha);
-      if (!schedule || !schedule.is_open) {
+      if (!schedule) {
         return 'No atendemos ese día (festivos o días no laborables). Elige otra fecha o contáctanos para reserva previa.';
       }
-      if (data.hora < schedule.open || data.hora > schedule.close) {
+      if (!schedule.is_open) {
+        return schedule.holidayName
+          ? `El ${formatDateLong(data.fecha)} es festivo (${schedule.holidayName}) y no atendemos. Elige otra fecha o contáctanos para reserva previa.`
+          : 'No atendemos ese día (festivos o días no laborables). Elige otra fecha o contáctanos para reserva previa.';
+      }
+
+      const openMinutes = timeToMinutes(schedule.open);
+      const closeMinutes = timeToMinutes(schedule.close);
+      const selectedMinutes = timeToMinutes(data.hora);
+      if (selectedMinutes < openMinutes || selectedMinutes > closeMinutes) {
         return `La hora debe estar dentro del horario de ${schedule.label}: ${formatHour(schedule.open)} – ${formatHour(schedule.close)}.`;
+      }
+
+      // El servicio debe poder terminar antes del cierre
+      const service = getService(data.servicio);
+      const duration = service ? service.duration_max : 0;
+      const latestStart = closeMinutes - duration;
+      if (duration > 0 && selectedMinutes > latestStart) {
+        return `El servicio "${data.servicio}" dura hasta ${duration} min. La última hora para iniciar es ${formatHour(minutesToTime(latestStart))} (cierre ${formatHour(schedule.close)}).`;
       }
       return null;
     }
 
     // ---------- Envío al Webhook de n8n ----------
+    function setSubmitLoading(isLoading) {
+      const submitBtn = document.getElementById('submitBtn');
+      const label = submitBtn.querySelector('.btn-label');
+      submitBtn.disabled = isLoading;
+      submitBtn.classList.toggle('is-loading', isLoading);
+      submitBtn.setAttribute('aria-busy', String(isLoading));
+      if (label) label.textContent = isLoading ? 'Enviando...' : 'Confirmar Reserva';
+    }
+
     async function submitBooking(event) {
       event.preventDefault();
 
       const form = document.getElementById('bookingForm');
       const errorEl = document.getElementById('formError');
-      const submitBtn = document.getElementById('submitBtn');
 
       errorEl.classList.add('hidden');
 
@@ -483,8 +774,16 @@
         return;
       }
 
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Enviando...';
+      setSubmitLoading(true);
+
+      // Evitar contenido mixto: página HTTPS + webhook HTTP
+      if (window.location.protocol === 'https:' && N8N_WEBHOOK_URL.startsWith('http://')) {
+        setSubmitLoading(false);
+        showModal('error', 'Servicio no disponible',
+          'El canal de reservas aún no está configurado para este dominio. Escríbenos por WhatsApp y te agendamos manualmente.');
+        showToast('Endpoint de reservas sin configurar');
+        return;
+      }
 
       try {
         const response = await fetch(N8N_WEBHOOK_URL, {
@@ -495,9 +794,17 @@
 
         if (response.ok) {
           showModal('success', '¡Reserva Confirmada!',
-            `Gracias ${payload.nombre}, tu cita para ${payload.servicio} el ${payload.fecha} a las ${payload.hora} ha sido registrada. Te contactaremos por WhatsApp.`);
+            `Gracias ${payload.nombre}, tu cita quedó agendada. Te contactaremos por WhatsApp para confirmar los detalles.`,
+            [
+              { label: 'Servicio', value: payload.servicio },
+              { label: 'Fecha', value: formatDateWithWeekday(payload.fecha) },
+              { label: 'Hora', value: formatHour(payload.hora) },
+              { label: 'Teléfono', value: payload.telefono }
+            ]);
           showToast('Reserva enviada correctamente');
           form.reset();
+          applyTimeBounds();
+          highlightSelectedCard('');
         } else {
           throw new Error('El servidor respondió con estado ' + response.status);
         }
@@ -507,8 +814,7 @@
           'No pudimos registrar tu reserva en este momento. Verifica tu conexión con el servicio e inténtalo de nuevo.');
         showToast('Error al enviar la reserva');
       } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Confirmar Reserva';
+        setSubmitLoading(false);
       }
     }
 
@@ -542,15 +848,30 @@
       // Avisar al usuario si el día elegido no tiene horario disponible
       fechaInput.addEventListener('change', () => {
         const schedule = getScheduleForDate(fechaInput.value);
+        const horaInput = document.getElementById('hora');
+
+        // Los límites se recalculan siempre (evita min/max obsoletos)
+        applyTimeBounds();
+        if (isHourOutsideBounds(horaInput)) horaInput.value = '';
+
         if (!fechaInput.value || !schedule) return;
         if (!schedule.is_open) {
-          showToast('Ese día no atendemos. Solo con reserva previa.');
-        } else {
-          const horaInput = document.getElementById('hora');
-          horaInput.setAttribute('min', schedule.open);
-          horaInput.setAttribute('max', schedule.close);
+          showToast(schedule.holidayName
+            ? `${schedule.holidayName}: ese día no atendemos. Solo con reserva previa.`
+            : 'Ese día no atendemos. Solo con reserva previa.');
         }
       });
+
+      // El servicio define la duración: recalcula la última hora disponible
+      document.getElementById('servicio').addEventListener('change', (e) => {
+        const horaInput = document.getElementById('hora');
+        applyTimeBounds();
+        if (isHourOutsideBounds(horaInput)) horaInput.value = '';
+        highlightSelectedCard(e.target.value);
+      });
+
+      // Estado de apertura en tiempo real (America/Bogota)
+      startOpenStatusWatcher();
 
       document.getElementById('bookingForm').addEventListener('submit', submitBooking);
 
